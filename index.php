@@ -131,7 +131,7 @@ echo $c_cmsPath.$tableName;
 				echo '<script>var currentTab = 0;</script>';
 		?>
 	</head>
-	<body>
+	<body class="theme3">
 	<div id="wrapper">
 		<h1>CMS Generator v1.0</h1>
 		<div id="tabContainer">
@@ -159,7 +159,7 @@ echo $c_cmsPath.$tableName;
 							$db_name = $row->Database;
 							echo '<option>'.$db_name.'</option>';
 						}
-						echo '</select><select id="tablename" name="tablename"><option value="">--------</option></select><input value="确定" type="submit" /></form>';
+						echo '</select><select id="tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 					} else {
 						$dbName = $_POST['dbname'];
 						MySQL_query("use ".$dbName, $conn);
@@ -171,7 +171,7 @@ echo $c_cmsPath.$tableName;
 							$fieldNames = array();
 							// 循环load出数据库字段，需要确保第一个是自增id，记录新增/更新时间默认用create_time/$update_time 
 							echo '<h2>请选择字段类型或选项：</h2>
-								<form id="typeForm" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=add">
+								<form id="" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=add">
 									<input type="hidden" id="dbname" name="dbname" value="'.$dbName.'"><input type="hidden" id="tablename" name="tablename" value="'.$tableName.'"><table><tbody><tr class="fieldslist"><td class="tdstyle">全选</td><td class=""><input type="checkbox" checked id="add_all_check" onclick="allCheck(\'add\')"></td></tr>';
 							for ($i=0; $i < $fields; $i++) {
 								//$type  = mysql_field_type($result, $i);
@@ -180,7 +180,7 @@ echo $c_cmsPath.$tableName;
 								$fieldNames[$i]  = mysql_field_name($result, $i);
 								loadtypes($fieldNames[$i], '');
 							}
-							echo '<tr><td><br><input value="GEN" type="submit" /></td><td></td></tr></tbody></table></form>';
+							echo '<tr><td><br><div><input value="开始生成" type="submit" /></div></td><td></td></tr></tbody></table></form>';
 						} else {
 							echo '<h2>找不到该表，请正确选择：</h2>
 						<form id="" name="" action="'.$c_indexPageName.'?type=add" method="post" enctype="multipart/form-data"><select id="dbname" name="dbname" onchange="changeDB(\'\');"><option>请选择db</option>';
@@ -188,7 +188,7 @@ echo $c_cmsPath.$tableName;
 							$db_name = $row->Database;
 							echo '<option>'.$db_name.'</option>';
 						}
-						echo '</select><select id="tablename" name="tablename"><option value="">--------</option></select><input value="确定" type="submit" /></form>';
+						echo '</select><select id="tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 						}
 					}
 				}
@@ -211,7 +211,7 @@ echo $c_cmsPath.$tableName;
 							$db_name = $row->Database;
 							echo '<option>'.$db_name.'</option>';
 						}
-						echo '</select><select id="edit_tablename" name="tablename"><option value="">--------</option></select><input value="确定" type="submit" /></form>';
+						echo '</select><select id="edit_tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 					} else {
 						$dbName = $_POST['dbname'];
 						MySQL_query("use ".$dbName, $conn);
@@ -223,7 +223,7 @@ echo $c_cmsPath.$tableName;
 							$fieldNames = array();
 							// 循环load出数据库字段，需要确保第一个是自增id，记录新增/更新时间默认用create_time/update_time
 							echo '<h2>请修改字段类型或选项：</h2>
-								<form id="typeForm" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=edit">
+								<form id="" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=edit">
 									<input type="hidden" id="dbname" name="dbname" value="'.$dbName.'"><input type="hidden" id="tablename" name="tablename" value="'.$tableName.'"><table><tbody><tr class="fieldslist"><td class="tdstyle">全选</td><td class=""><input type="checkbox" id="edit_all_check" onclick="allCheck(\'edit\')"></td></tr>';
 							MySQL_query("use ".$c_dbName, $conn);
 							for ($i=0; $i < $fields; $i++) {
@@ -262,7 +262,7 @@ echo $c_cmsPath.$tableName;
 									echo '\';</script>';
 								}
 							}
-							echo '<tr><td><br><input value="GEN" type="submit" /></td><td></td></tr></tbody></table></form>';
+							echo '<tr><td><br><input value="开始生成" type="submit" /></td><td></td></tr></tbody></table></form>';
 						} else {
 							echo '<h2>找不到该表，请正确选择：</h2>
 						<form id="" name="" action="'.$c_indexPageName.'?type=edit" method="post" enctype="multipart/form-data"><select id="edit_dbname" name="dbname" onchange="changeDB(\'edit_\');"><option>请选择db</option>';
@@ -270,14 +270,14 @@ echo $c_cmsPath.$tableName;
 							$db_name = $row->Database;
 							echo '<option>'.$db_name.'</option>';
 						}
-						echo '</select><select id="edit_tablename" name="tablename"><option value="">--------</option></select><input value="确定" type="submit" /></form>';
+						echo '</select><select id="edit_tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 						}
 					}
 				}
 			?>
 				</div>
 			</div>
-			<a class="backlink" href="<?php echo $c_indexPageName; ?>">返回首页</a>
+			<div id="back"><input type="button" onclick="location.href='<?php echo $c_indexPageName; ?>'" value="返回首页"><div>
 		</div>
 	</body>
 </html>
