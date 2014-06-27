@@ -21,15 +21,6 @@ h2{
 	margin-bottom:20px;
 }
 
-.backlink {
-	display:block;
-	font-size:1.2em;
-	padding-top:20px;
-	color:#FFF;
-	text-decoration:none;
-	text-align:center;
-}
-
 .fieldslist {
 	height: 30px;
 	vertical-align: top;
@@ -112,57 +103,7 @@ h2{
 	margin:0;
 	color:#333;
 }
-/*
-#selectTableForm1 input[type="submit"],#selectTableForm2 input[type="submit"] {
--moz-border-radius:50px;
--webkit-border-radius:50px;
-border-radius:50px;
 
--moz-box-shadow:0 1px 0 rgba(0,0,0,0.3);
--webkit-box-shadow:0 1px 0 rgba(0,0,0,0.3);
-box-shadow:0 1px 0 rgba(0,0,0,0.3);
-
-background: -moz-linear-gradient(19% 75% 90deg, #E0E0E0, #FAFAFA);
-background: -webkit-gradient(linear, left top, left bottom, from(#FAFAFA), to(#E0E0E0));
-color:#4A4A4A;
-float:left;
-font-size:11px;
-margin-top:10px;
-padding:5px 5px;
-text-shadow:1px 1px 0 rgba(255, 255, 255, 0.7);
-width:100px;
-}
-
-#selectTableForm1 input[type="submit"]:hover ,#selectTableForm2 input[type="submit"]:hover {
-background: -moz-linear-gradient(19% 75% 90deg,#D6D6D6, #FAFAFA);
-background: -webkit-gradient(linear, left top, left bottom, from(#FAFAFA), to(#D6D6D6));
-}
-
-#typeForm1 input[type="submit"],#typeForm2 input[type="submit"] {
--moz-border-radius:50px;
--webkit-border-radius:50px;
-border-radius:50px;
-
--moz-box-shadow:0 1px 0 rgba(0,0,0,0.3);
--webkit-box-shadow:0 1px 0 rgba(0,0,0,0.3);
-box-shadow:0 1px 0 rgba(0,0,0,0.3);
-
-background: -moz-linear-gradient(19% 75% 90deg, #E0E0E0, #FAFAFA);
-background: -webkit-gradient(linear, left top, left bottom, from(#FAFAFA), to(#E0E0E0));
-color:#4A4A4A;
-float:left;
-font-size:11px;
-margin-top:10px;
-padding:5px 5px;
-text-shadow:1px 1px 0 rgba(255, 255, 255, 0.7);
-width:100px;
-}
-
-#theme3 input[type="submit"]:hover ,#typeForm2 input[type="submit"]:hover {
-background: -moz-linear-gradient(19% 75% 90deg,#D6D6D6, #FAFAFA);
-background: -webkit-gradient(linear, left top, left bottom, from(#FAFAFA), to(#D6D6D6));
-}
-*/
 .theme3 input[type="submit"] {
 -moz-border-radius:50px;
 -webkit-border-radius:50px;
@@ -180,12 +121,13 @@ font-size:11px;
 margin-top:10px;
 padding:5px 5px;
 text-shadow:1px 1px 0 rgba(255, 255, 255, 0.7);
-width:100px;
+width:90px;
+border: 2px solid blue;
+font-weight :bold;
 }
 
 .theme3 input[type="submit"]:hover {
-background: -moz-linear-gradient(19% 75% 90deg,#D6D6D6, #FAFAFA);
-background: -webkit-gradient(linear, left top, left bottom, from(#FAFAFA), to(#D6D6D6));
+border: 2px solid blue;
 }
 
 #back {
