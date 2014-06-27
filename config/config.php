@@ -3,10 +3,11 @@
 	$servername = "127.0.0.1";
 	$username = "pasco";
 	$password = "123456";
-	$dbname = "its";
+	$c_dbName = "cmsg";
 	$c_typeTableName = 'cmsg_field_type';
 	$c_optionTableName = 'cmsg_field_option';
 	$c_fkTableName = 'cmsg_table_fk';
+	$c_userTableName = 'cmsg_user';
 	$c_configPath = 'config/';
 	$c_configPageName = 'config.php';
 	$c_commonPageName = 'common.php';

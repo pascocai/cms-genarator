@@ -1,5 +1,6 @@
 <?php
-$link = mysql_connect('localhost','pasco','123456');
+require_once "config/config.php";
+$link = mysql_connect($servername,$username,$password);
 $dbName = $_POST['dbname'];
 $db_table = mysql_list_tables($dbName);
 $tables = array();

@@ -34,7 +34,7 @@ function loadtypes($fieldName, $addOrEdit) {
 
 function gencms($dbName, $tableName, $showFields) {
 	require_once "gen.php";
-	global $c_cmsPath, $c_configPath, $c_configPageName, $c_commonPageName, $filePath, $c_libsPath, $c_cssPath, $c_jsPath, $c_listPageName, $c_addPageName, $c_editPageName, $c_deletePageName, $c_loginPageName, $c_typeTableName, $c_optionTableName, $c_fkTableName, $conn;
+	global $c_dbName, $c_cmsPath, $c_configPath, $c_configPageName, $c_commonPageName, $filePath, $c_libsPath, $c_cssPath, $c_jsPath, $c_listPageName, $c_addPageName, $c_editPageName, $c_deletePageName, $c_loginPageName, $c_typeTableName, $c_optionTableName, $c_fkTableName, $conn;
 	MySQL_query("use ".$dbName, $conn);
 	$sql = "SELECT * FROM " . $tableName;
 	$result = mysql_query($sql);
@@ -46,8 +46,8 @@ function gencms($dbName, $tableName, $showFields) {
 	}
 	
 	/* 生成存放cms文件的目录 */
-	if(!is_dir('cms'))
-		mkdir('cms');
+	if(!is_dir($c_cmsPath))
+		mkdir($c_cmsPath);
 	if(!is_dir($c_cmsPath.$tableName.'/'))
 		mkdir($c_cmsPath.$tableName.'/');
 	if(!is_dir($c_cmsPath.$tableName.'/'.$c_jsPath))
@@ -57,6 +57,8 @@ echo $c_cmsPath.$tableName;
 	/* 设置各个变量 */
 	if(is_dir($c_cmsPath.$tableName.'/')&&is_dir($c_cmsPath.$tableName.'/'.$c_jsPath)) {
 		$gencms = new gencms();
+		$gencms->cmsgConn = $conn;
+		$gencms->cmsgDbName = $c_dbName;
 		$gencms->typeTableName = $c_typeTableName;
 		$gencms->optionTableName = $c_optionTableName;
 		$gencms->fkTableName = $c_fkTableName;
@@ -223,6 +225,7 @@ echo $c_cmsPath.$tableName;
 							echo '<h2>请修改字段类型或选项：</h2>
 								<form id="typeForm" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=edit">
 									<input type="hidden" id="dbname" name="dbname" value="'.$dbName.'"><input type="hidden" id="tablename" name="tablename" value="'.$tableName.'"><table><tbody><tr class="fieldslist"><td class="tdstyle">全选</td><td class=""><input type="checkbox" id="edit_all_check" onclick="allCheck(\'edit\')"></td></tr>';
+							MySQL_query("use ".$c_dbName, $conn);
 							for ($i=0; $i < $fields; $i++) {
 								$fieldNames[$i] = mysql_field_name($result, $i);
 								// 读取该字段的类型

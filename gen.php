@@ -1,5 +1,7 @@
 <?php
 class gencms {
+	var $cmsgConn;
+	var $cmsgDbName;
 	var $typeTableName;
 	var $optionTableName;
 	var $fkTableName;
@@ -211,7 +213,7 @@ class gencms {
 		$addCode .= '
 		$create_time = date(\'Y-m-d H:i:s\');
 		$update_time = date(\'Y-m-d H:i:s\');
-		$query = MySQL_query("INSERT INTO '.$tableName;
+		$sql = "INSERT INTO '.$tableName;
 		$addCode .= ' (';
 		for ($i=0; $i < $fields; $i++) {
 			if($i==0)
@@ -226,7 +228,8 @@ class gencms {
 			else
 				$addCode .= ', \'$'.$fieldNames[$i].'\'';
 		}
-		$addCode .= ')");
+		$addCode .= ')";
+		$query = MySQL_query($sql);
 		if($query==1 && isset($_GET[\'fkid\']))
 			header(\'Location: '.$this->listPageName.'?page=\'.$page.\'&fkid=\'.$_GET[\'fkid\']);
 		else
@@ -249,6 +252,8 @@ class gencms {
 			</fieldset>
 			<form id="addForm" name="addForm" action="'.$this->addPageName.'?action=add&page=<?php echo $page;if(isset($_GET[\'fkid\']))echo \'&fkid=\'.$_GET[\'fkid\']; ?>" method="post" enctype="multipart/form-data">
 				<fieldset id="addFormBody">';
+		require_once "config/config.php";
+		MySQL_query("use ".$this->cmsgDbName, $this->cmsgConn);
 		$sql = "DELETE FROM ".$this->typeTableName." WHERE table_name = '".$tableName."'";
 		MySQL_query($sql);
 		$sql = "DELETE FROM ".$this->fkTableName." WHERE table_name = '".$tableName."'";
@@ -750,7 +755,7 @@ function editRecord(param) {
 		$loginCode .= '<?php
 	require_once \'../../'.$this->configPath.$this->configPageName.'\';
 	$conn = MySQL_connect($servername, $username, $password);
-	MySQL_query(\'use \'.$dbname, $conn);
+	MySQL_query(\'use \'.$c_dbName, $conn);
 	MySQL_query(\'SET NAMES utf8\');
 	if($_GET[\'action\']==\'login\') {
 		$url = base64_decode($_POST[\'url\']);
@@ -758,7 +763,8 @@ function editRecord(param) {
 			$url = \''.$this->listPageName.'\';
 		$loginname = $_POST[\'loginname\'];
 		$password = $_POST[\'password\'];
-		$rs = MySQL_query("SELECT * FROM cmsg_user WHERE loginname = \'$loginname\'");
+		$sql = "SELECT * FROM ".$c_userTableName." WHERE loginname = \'$loginname\'";
+		$rs = MySQL_query($sql);
 		MySQL_num_rows($rs);
 		$result=mysql_fetch_array($rs);
 		if(md5($password)==$result[\'password\']) {
