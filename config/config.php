@@ -1,4 +1,5 @@
 <?php
+	error_reporting(E_ALL ^ E_NOTICE);
 	date_default_timezone_set(PRC);
 	$servername = "127.0.0.1";
 	$username = "pasco";

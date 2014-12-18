@@ -1,7 +1,9 @@
 <?php
 require_once "config/config.php";
-$conn = MySQL_connect($servername, $username, $password);
-MySQL_query('SET NAMES utf8');
+//$conn = MySQL_connect($servername, $username, $password);
+$link = mysqli_connect($servername, $username,  $password, $c_dbName);
+//MySQL_query('SET NAMES utf8');
+mysqli_query($link, 'SET NAMES utf8');
 
 /****************************************
  *								        *
@@ -34,16 +36,27 @@ function loadtypes($fieldName, $addOrEdit) {
 
 function gencms($dbName, $tableName, $showFields) {
 	require_once "gen.php";
-	global $c_dbName, $c_cmsPath, $c_configPath, $c_configPageName, $c_commonPageName, $filePath, $c_libsPath, $c_cssPath, $c_jsPath, $c_listPageName, $c_addPageName, $c_editPageName, $c_deletePageName, $c_loginPageName, $c_typeTableName, $c_optionTableName, $c_fkTableName, $conn;
-	MySQL_query("use ".$dbName, $conn);
+	global $c_dbName, $c_cmsPath, $c_configPath, $c_configPageName, $c_commonPageName, $filePath, $c_libsPath, $c_cssPath, $c_jsPath, $c_listPageName, $c_addPageName, $c_editPageName, $c_deletePageName, $c_loginPageName, $c_typeTableName, $c_optionTableName, $c_fkTableName, $servername, $username,  $password, $link;
+	//$conn = mysqli_connect($servername, $username,  $password, $dbName);
 	$sql = "SELECT * FROM " . $tableName;
-	$result = mysql_query($sql);
-	$fields = mysql_num_fields($result);
-	$rows   = mysql_num_rows($result);
+	mysqli_select_db($link, $dbName);
+	$result = mysqli_query($link, $sql);//print_r($conn);
+	if(!$result){
+		echo 'error';
+		return;
+	}
+	$fields = mysqli_num_fields($result);
+	$rows   = mysqli_num_rows($result);/*
 	$fieldNames = array();
 	for ($i=0; $i < $fields; $i++) {
-		$fieldNames[$i]  = mysql_field_name($result, $i);
-	}
+		$fieldNames[$i]  = mysqli_field_name($result, $i);
+	}*/
+	$fieldNames = array();
+
+							for ($i=0; $i < $fields; $i++) {
+								$finfo = mysqli_fetch_field_direct($result, $i);
+								$fieldNames[$i] = $finfo->name;
+							}
 	
 	/* 生成存放cms文件的目录 */
 	if(!is_dir($c_cmsPath))
@@ -57,7 +70,8 @@ echo $c_cmsPath.$tableName;
 	/* 设置各个变量 */
 	if(is_dir($c_cmsPath.$tableName.'/')&&is_dir($c_cmsPath.$tableName.'/'.$c_jsPath)) {
 		$gencms = new gencms();
-		$gencms->cmsgConn = $conn;
+		mysqli_select_db($link, $c_dbName);
+		$gencms->cmsgConn = $link;
 		$gencms->cmsgDbName = $c_dbName;
 		$gencms->typeTableName = $c_typeTableName;
 		$gencms->optionTableName = $c_optionTableName;
@@ -112,8 +126,8 @@ echo $c_cmsPath.$tableName;
 		echo '<br><br>login page: <a href="'.$filePath.$c_loginPageName.'" target="_blank">'.$c_loginPageName.'</a>';
 	
 	echo '<br><br><h3>请根据需要手工添加config、js、css、lib文件和upload目录</h3>';
-	mysql_free_result($result);
-	mysql_close();
+	//mysql_free_result($result);
+	//mysql_close();
 }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -150,43 +164,48 @@ echo $c_cmsPath.$tableName;
 				if($_GET['action']=='gen' && $_GET['type']=='add') {
 					gencms($dbName, $tableName, $showFields);
 				} else {
-					$dbs = mysql_list_dbs($conn);
+					//$dbs = mysql_list_dbs($conn);
+					$sql = "SHOW DATABASES";
+					$dbs = mysqli_query($link, $sql);
+					//$dbs = mysql_query($sql);
 					$tableName = $_POST['tablename'];
 					if($tableName=='') {
 						echo '<h2>1.请选择数据库和表：</h2>
 						<form id="" name="" action="'.$c_indexPageName.'?type=add" method="post" enctype="multipart/form-data"><select id="dbname" name="dbname" onchange="changeDB(\'\');"><option>请选择db</option>';
-						while($row = mysql_fetch_object($dbs)){
-							$db_name = $row->Database;
-							echo '<option>'.$db_name.'</option>';
+						while($row = mysqli_fetch_row($dbs)){
+							//$db_name = $row->Database;
+							echo '<option>'.$row[0].'</option>';
 						}
 						echo '</select><select id="tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 					} else {
 						$dbName = $_POST['dbname'];
-						MySQL_query("use ".$dbName, $conn);
+						mysqli_select_db($link, $dbName);
 						$sql = "SELECT * FROM " . $tableName;
-						$result = mysql_query($sql);
-						$fields = mysql_num_fields($result);
-						$table  = mysql_field_table($result, 0);
-						if($table) {
+						$result = mysqli_query($link, $sql);
+						if($result)
+							$fields = mysqli_num_fields($result);
+						//$table  = mysqli_fetch_fields($result);
+						//if($table) {
+						if ($fields>0) {
 							$fieldNames = array();
 							// 循环load出数据库字段，需要确保第一个是自增id，记录新增/更新时间默认用create_time/$update_time 
 							echo '<h2>请选择字段类型或选项：</h2>
 								<form id="" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=add">
 									<input type="hidden" id="dbname" name="dbname" value="'.$dbName.'"><input type="hidden" id="tablename" name="tablename" value="'.$tableName.'"><table><tbody><tr class="fieldslist"><td class="tdstyle">全选</td><td class=""><input type="checkbox" checked id="add_all_check" onclick="allCheck(\'add\')"></td></tr>';
+							
 							for ($i=0; $i < $fields; $i++) {
-								//$type  = mysql_field_type($result, $i);
-								//$len   = mysql_field_len($result, $i);
-								//$flags = mysql_field_flags($result, $i);
-								$fieldNames[$i]  = mysql_field_name($result, $i);
+								$finfo = mysqli_fetch_field_direct($result, $i);
+								$fieldNames[$i] = $finfo->name;
 								loadtypes($fieldNames[$i], '');
 							}
+							$result->close();
 							echo '<tr><td><br><div><input value="开始生成" type="submit" /></div></td><td></td></tr></tbody></table></form>';
 						} else {
 							echo '<h2>找不到该表，请正确选择：</h2>
 						<form id="" name="" action="'.$c_indexPageName.'?type=add" method="post" enctype="multipart/form-data"><select id="dbname" name="dbname" onchange="changeDB(\'\');"><option>请选择db</option>';
-						while($row = mysql_fetch_object($dbs)){
-							$db_name = $row->Database;
-							echo '<option>'.$db_name.'</option>';
+						while($row = mysqli_fetch_row($dbs)){
+							//$db_name = $row->Database;
+							echo '<option>'.$row[0].'</option>';
 						}
 						echo '</select><select id="tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 						}
@@ -202,37 +221,45 @@ echo $c_cmsPath.$tableName;
 				if($_GET['action']=='gen' && $_GET['type']=='edit') {
 					gencms($dbName, $tableName, $showFields);
 				} else {
-					$dbs = mysql_list_dbs($conn);
+					$sql = "SHOW DATABASES";
+					$dbs = mysqli_query($link, $sql);
 					$tableName = $_POST['tablename'];
 					if($tableName=='') {
 						echo '<h2>2.请选择数据库和表：</h2>
 						<form id="" name="" action="'.$c_indexPageName.'?type=edit" method="post" enctype="multipart/form-data"><select id="edit_dbname" name="dbname" onchange="changeDB(\'edit_\');"><option>请选择db</option>';
-						while($row = mysql_fetch_object($dbs)){
-							$db_name = $row->Database;
-							echo '<option>'.$db_name.'</option>';
+						while($row = mysqli_fetch_row($dbs)){
+							//$db_name = $row->Database;
+							echo '<option>'.$row[0].'</option>';
 						}
 						echo '</select><select id="edit_tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 					} else {
 						$dbName = $_POST['dbname'];
-						MySQL_query("use ".$dbName, $conn);
+						mysqli_select_db($link, $dbName);
 						$sql = "SELECT * FROM " . $tableName;
-						$result = mysql_query($sql);
-						$fields = mysql_num_fields($result);
-						$table  = mysql_field_table($result, 0);
-						if($table) {
-							$fieldNames = array();
+						$result = mysqli_query($link, $sql);
+						if($result)
+							$fields = mysqli_num_fields($result);
+						//$table  = mysqli_fetch_fields($result);
+						//if($table) {
+						
+						if ($fields>0) {
+							$fieldNames = array();//print_r($fieldNames);exit();
 							// 循环load出数据库字段，需要确保第一个是自增id，记录新增/更新时间默认用create_time/update_time
 							echo '<h2>请修改字段类型或选项：</h2>
 								<form id="" name="typeForm" method="post" action="'.$c_indexPageName.'?action=gen&type=edit">
 									<input type="hidden" id="dbname" name="dbname" value="'.$dbName.'"><input type="hidden" id="tablename" name="tablename" value="'.$tableName.'"><table><tbody><tr class="fieldslist"><td class="tdstyle">全选</td><td class=""><input type="checkbox" id="edit_all_check" onclick="allCheck(\'edit\')"></td></tr>';
-							MySQL_query("use ".$c_dbName, $conn);
+							mysqli_select_db($link, $c_dbName);
 							for ($i=0; $i < $fields; $i++) {
-								$fieldNames[$i] = mysql_field_name($result, $i);
+								//$fieldNames[$i] = mysql_field_name($result, $i);
+								$finfo = mysqli_fetch_field_direct($result, $i);
+								$fieldNames[$i] = $finfo->name;
 								// 读取该字段的类型
 								$sql = "SELECT * FROM ".$c_typeTableName." WHERE table_field = '".$tableName.'_'.$fieldNames[$i]."'";
-								$rs = mysql_query($sql);
-								$type = mysql_fetch_array($rs);
+								$rs = mysqli_query($link, $sql);
 								loadtypes($fieldNames[$i], 'edit');
+								if(!is_object($rs))
+									continue;
+								$type = mysqli_fetch_array($rs);//print_r($type);
 								echo '<script>';
 								echo 'document.getElementById("edit_'.$fieldNames[$i].'_type_v'.$type['type_value'].'").selected = true;';
 								if($type['is_checked']==1)
@@ -241,22 +268,22 @@ echo $c_cmsPath.$tableName;
 								if($type['type_value']>1&&$type['type_value']<5) {
 									// 读取该字段的选项
 									$sql = "SELECT * FROM ".$c_optionTableName." WHERE table_field = '".$tableName.'_'.$fieldNames[$i]."'";
-									$rs = mysql_query($sql);
-									$options = mysql_num_rows($rs);
+									$rs = mysqli_query($link, $sql);
+									$options = mysqli_num_rows($rs);
 									echo '<script>document.getElementById("edit_'.$fieldNames[$i].'_options").innerHTML = \'<input value="add" type="button" onclick="addOption(\\\''.$fieldNames[$i].'\\\',\\\'edit\\\')" /><input value="del" type="button" onclick="delOption(\\\''.$fieldNames[$i].'\\\',\\\'edit\\\')" /><input type="hidden" id="edit_'.$fieldNames[$i].'_options_count" name="'.$fieldNames[$i].'_options_count" value='.$options.'>';
 									for($j=0;$j<$options;$j++) {
-										$option = mysql_fetch_array($rs);
+										$option = mysqli_fetch_array($rs);
 										echo '<div><input type="text" id="'.$fieldNames[$i].'_option_'.$j.'" name="'.$fieldNames[$i].'_option_'.$j.'" value="'.$option['option_value'].'"></div>';
 									}
 									echo '\';</script>';
 								} elseif($type['type_value']==8) {
 									// 读取该字段的选项
 									$sql = "SELECT * FROM ".$c_fkTableName." WHERE table_field = '".$tableName.'_'.$fieldNames[$i]."'";
-									$rs = mysql_query($sql);
-									$options = mysql_num_rows($rs);
+									$rs = mysqli_query($link, $sql);
+									$options = mysqli_num_rows($rs);
 									echo '<script>document.getElementById("edit_'.$fieldNames[$i].'_options").innerHTML = \'<input type="hidden" id="edit_'.$fieldNames[$i].'_options_count" name="'.$fieldNames[$i].'_options_count" value='.$options.'>';
 									for($j=0;$j<$options;$j++) {
-										$option = mysql_fetch_array($rs);
+										$option = mysqli_fetch_array($rs);
 										echo '<div><input type="text" id="'.$fieldNames[$i].'_option_'.$j.'" name="'.$fieldNames[$i].'_option_'.$j.'" value="'.$option['fk_table_name'].'"></div>';
 									}
 									echo '\';</script>';
@@ -266,9 +293,9 @@ echo $c_cmsPath.$tableName;
 						} else {
 							echo '<h2>找不到该表，请正确选择：</h2>
 						<form id="" name="" action="'.$c_indexPageName.'?type=edit" method="post" enctype="multipart/form-data"><select id="edit_dbname" name="dbname" onchange="changeDB(\'edit_\');"><option>请选择db</option>';
-						while($row = mysql_fetch_object($dbs)){
-							$db_name = $row->Database;
-							echo '<option>'.$db_name.'</option>';
+						while($row = mysqli_fetch_row($dbs)){
+							//$db_name = $row->Database;
+							echo '<option>'.$row[0].'</option>';
 						}
 						echo '</select><select id="edit_tablename" name="tablename"><option value="">--------</option></select><div><input value="确定" type="submit" /></div></form>';
 						}

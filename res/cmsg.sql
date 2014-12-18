@@ -93,3 +93,18 @@ INSERT INTO `cmsg_user` (`cuid`, `loginname`, `realname`, `email`, `password`, `
 /*!40000 ALTER TABLE `cmsg_user` ENABLE KEYS */;
 /*!40014 SET FOREIGN_KEY_CHECKS=1 */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+
+-- demo_participant
+CREATE TABLE IF NOT EXISTS `demo_participant` (
+  `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) COLLATE utf8_bin DEFAULT NULL,
+  `avatar` varchar(32) COLLATE utf8_bin DEFAULT NULL,
+  `email` varchar(128) COLLATE utf8_bin DEFAULT NULL,
+  `gender` varchar(2) COLLATE utf8_bin DEFAULT NULL,
+  `address` varchar(32) COLLATE utf8_bin DEFAULT NULL,
+  `birth` datetime DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `is_delete` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

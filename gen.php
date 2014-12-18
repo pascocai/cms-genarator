@@ -33,10 +33,10 @@ class gencms {
 			}
 		}
 		$listCode .= '<?php
+	session_start();
 	require_once \'../'.$this->configPath.$this->configPageName.'\';
-	$conn = MySQL_connect($servername, $username, $password);
-	MySQL_query(\'use \'.$dbname, $conn);
-	MySQL_query(\'SET NAMES utf8\');
+	$link = mysqli_connect($servername, $username,  $password, $dbname);
+	mysqli_query($link, \'SET NAMES utf8\');
 	require_once \'../'.$this->configPath.$this->commonPageName.'\';
 	require_once \''.$this->libsPath.'shareFunction.php\';
 	$currentTime = date(\'Y-m-d H:i:s\');
@@ -54,16 +54,18 @@ class gencms {
 	if($hasFK)
 		$fkid = $_GET[\'fkid\'];
 	$sql = "SELECT count(*) FROM '.$tableName.' WHERE '.$fieldNames[$fields-1].' = 0";
-	$query = MySQL_query($sql);
-	$rt = mysql_fetch_array($query);
+	$query = mysqli_query($link, $sql);
+	$rt = mysqli_fetch_array($query);
 	$rscount = $rt[0];
 	$pagination = multiAdmin($rscount, $tpp, $page, $mpurl, \'fkid=\'.$fkid);
-	if($hasFK)
-		$rs = MySQL_query("SELECT * FROM '.$tableName.' WHERE '.$fieldNames[$fields-1].' = 0 AND fkid = ". $fkid ." ORDER BY '.$fieldNames[0].' DESC limit $startLimit, $tpp");
-	else
-		$rs = MySQL_query("SELECT * FROM '.$tableName.' WHERE '.$fieldNames[$fields-1].' = 0 ORDER BY '.$fieldNames[0].' DESC limit $startLimit, $tpp");
-	$fields = mysql_num_fields($rs);
-	$rows = mysql_num_rows($rs);
+	if($hasFK) {
+		$sql = "SELECT * FROM '.$tableName.' WHERE '.$fieldNames[$fields-1].' = 0 AND fkid = ". $fkid ." ORDER BY '.$fieldNames[0].' DESC limit $startLimit, $tpp";
+		$rs = mysqli_query($link, $sql);
+	} else
+		$sql ="SELECT * FROM '.$tableName.' WHERE '.$fieldNames[$fields-1].' = 0 ORDER BY '.$fieldNames[0].' DESC limit $startLimit, $tpp";
+		$rs = mysqli_query($link, $sql);
+	$fields = mysqli_num_fields($rs);
+	$rows = mysqli_num_rows($rs);
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -89,7 +91,6 @@ class gencms {
 		if($hasFK)
 			$listCode .= '<input type="hidden" id="hasFK" value="<?php echo $fkid; ?>">
 			<?php
-			session_start();
 			if($_SESSION[\'rights\']<=2) {
 			?>
 			<button class="addButton" onclick="addRecord(\'<?php echo $page; ?>\',\'<?php $uri = request_uri();echo $uri; ?>\')" type="button">新增</button>
@@ -139,7 +140,7 @@ class gencms {
 				$fkTables = array('.$fkTables.');
 				$imgFields = array('.$imgFields.');
 				';
-			$listCode .= 'while($row = mysql_fetch_array($rs)){
+			$listCode .= 'while($row = mysqli_fetch_array($rs)){
 					echo \'<tr>\';
 					$fkTableIndex = 0;
 					for($i=0;$i<$fields;$i++){
@@ -160,8 +161,8 @@ class gencms {
 				}
 			} else
 				echo \'<tr><td colspan="'.($fields+1).'">暂无资料</td></tr>\';
-			mysql_free_result($rs);
-			mysql_close($conn);
+			//mysql_free_result($rs);
+			//mysql_close($link);
 			?>
 			</table>
 			<?php echo $pagination; ?>
@@ -183,8 +184,8 @@ class gencms {
 		require_once 'config/config.php';
 		$fields = count($fieldNames);
 		$addCode .= '<?php
-	require_once \'../'.$this->configPath.$this->commonPageName.'\';
 	session_start();
+	require_once \'../'.$this->configPath.$this->commonPageName.'\';
 	if($_SESSION[\'rights\']>2) {
 		$url = base64_decode($_GET[\'url\']);
 		header(\'Location: \'.$url);
@@ -192,9 +193,8 @@ class gencms {
 	$page = $_GET[\'page\'];
 	if($_GET[\'action\']==\'add\') {
 		require_once \'../'.$this->configPath.$this->configPageName.'\';
-		$conn = MySQL_connect($servername, $username, $password);
-		MySQL_query(\'use \'.$dbname, $conn);
-		MySQL_query(\'SET NAMES utf8\');
+		$link = mysqli_connect($servername, $username,  $password, $dbname);
+		mysqli_query($link, \'SET NAMES utf8\');
 		require_once \''.$this->libsPath.'shareFunction.php\';';
 		for ($i=0; $i < $fields; $i++) {
 			if($_POST[$fieldNames[$i].'_type']==3) {
@@ -229,7 +229,7 @@ class gencms {
 				$addCode .= ', \'$'.$fieldNames[$i].'\'';
 		}
 		$addCode .= ')";
-		$query = MySQL_query($sql);
+		$query =  mysqli_query($link, $sql);
 		if($query==1 && isset($_GET[\'fkid\']))
 			header(\'Location: '.$this->listPageName.'?page=\'.$page.\'&fkid=\'.$_GET[\'fkid\']);
 		else
@@ -253,13 +253,13 @@ class gencms {
 			<form id="addForm" name="addForm" action="'.$this->addPageName.'?action=add&page=<?php echo $page;if(isset($_GET[\'fkid\']))echo \'&fkid=\'.$_GET[\'fkid\']; ?>" method="post" enctype="multipart/form-data">
 				<fieldset id="addFormBody">';
 		require_once "config/config.php";
-		MySQL_query("use ".$this->cmsgDbName, $this->cmsgConn);
+		//MySQL_query("use ".$this->cmsgDbName, $this->cmsgConn);
 		$sql = "DELETE FROM ".$this->typeTableName." WHERE table_name = '".$tableName."'";
-		MySQL_query($sql);
+		$result = mysqli_query($this->cmsgConn, $sql);
 		$sql = "DELETE FROM ".$this->fkTableName." WHERE table_name = '".$tableName."'";
-		MySQL_query($sql);
+		$result = mysqli_query($this->cmsgConn, $sql);
 		$sql = "DELETE FROM ".$this->optionTableName." WHERE table_name = '".$tableName."'";
-		MySQL_query($sql);
+		$result = mysqli_query($this->cmsgConn, $sql);
 		for ($i=0; $i < $fields; $i++) {
 			if($_POST[$fieldNames[$i].'_type']==0) {	// 0 = 只读
 				$addCode .= '
@@ -272,7 +272,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				$result = mysqli_query($this->cmsgConn, $sql);
 			} elseif($_POST[$fieldNames[$i].'_type']==1) {	// 1 = text输入框
 				$addCode .= '
 					<div>
@@ -285,7 +285,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 			} elseif($_POST[$fieldNames[$i].'_type']==2) {	// 2 = 下拉菜单，生成代码后，第一个选项v0的值会为空
 				$addCode .= '
 					<div>
@@ -298,7 +298,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 				for ($j=0; $j < $_POST[$fieldNames[$i].'_options_count']; $j++) {
 					if($j==0)
 						$addCode .= '
@@ -308,7 +308,7 @@ class gencms {
 								<option id="'.$fieldNames[$i].'_v'.$j.'" value="'.$_POST[$fieldNames[$i].'_option_'.$j].'">'.$_POST[$fieldNames[$i].'_option_'.$j].'</option>';
 					// 将该字段的各个选项记入到数据库中
 					$sql = "INSERT INTO ".$this->optionTableName." (table_name, table_field, option_index, option_value) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$j."', '".$_POST[$fieldNames[$i]."_option_".$j]."')";
-					MySQL_query($sql);
+					mysqli_query($this->cmsgConn, $sql);
 				}
 				$addCode .= '
 							</select>
@@ -325,13 +325,13 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 				for ($j=0; $j < $_POST[$fieldNames[$i].'_options_count']; $j++) {			
 					$addCode .= '
 							<input type="checkbox" id="'.$fieldNames[$i].'_v'.$j.'" name="'.$fieldNames[$i].'[]" value="'.$_POST[$fieldNames[$i].'_option_'.$j].'">'.$_POST[$fieldNames[$i].'_option_'.$j];
 					// 将该字段的各个选项记入到数据库中
 					$sql = "INSERT INTO ".$this->optionTableName." (table_name, table_field, option_index, option_value) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$j."', '".$_POST[$fieldNames[$i]."_option_".$j]."')";
-					MySQL_query($sql);
+					mysqli_query($this->cmsgConn, $sql);
 				}
 				$addCode .= '
 						</span>
@@ -347,13 +347,13 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 				for ($j=0; $j < $_POST[$fieldNames[$i].'_options_count']; $j++) {			
 					$addCode .= '
 							<input type="radio" id="'.$fieldNames[$i].'_v'.$j.'" name="'.$fieldNames[$i].'" value="'.$_POST[$fieldNames[$i].'_option_'.$j].'">'.$_POST[$fieldNames[$i].'_option_'.$j];
 					// 将该字段的各个选项记入到数据库中
 					$sql = "INSERT INTO ".$this->optionTableName." (table_name, table_field, option_index, option_value) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$j."', '".$_POST[$fieldNames[$i]."_option_".$j]."')";
-					MySQL_query($sql);
+					mysqli_query($this->cmsgConn, $sql);
 				}
 				$addCode .= '
 						</span>
@@ -371,7 +371,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 			} elseif($_POST[$fieldNames[$i].'_type']==6) {	// 6 = textarea文本输入框
 				$addCode .= '
 					<div>
@@ -384,7 +384,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 			} elseif($_POST[$fieldNames[$i].'_type']==7) {	// 7 = 上传图片
 				$addCode .= '
 					<div>
@@ -397,7 +397,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 			} elseif($_POST[$fieldNames[$i].'_type']==8) {	// 8 = 外键
 				$fkTable = $_POST[$fieldNames[$i].'_option_0'];
 				$addCode .= '
@@ -413,11 +413,11 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 				for ($j=0; $j < $_POST[$fieldNames[$i].'_options_count']; $j++) {
 					// 将该字段的各个选项记入到数据库中
 					$sql = "INSERT INTO ".$this->fkTableName." (table_name, table_field, fk_table_name) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$fkTable."')";
-					MySQL_query($sql);
+					mysqli_query($this->cmsgConn, $sql);
 				}
 			} elseif($_POST[$fieldNames[$i].'_type']==9) {	// 隐藏字段，不显示，不能修改或由系统自动修改，一般记录用户新增/更新时间create_time/update_time
 				// 将字段的类型记入到数据库中
@@ -426,7 +426,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 			} elseif($_POST[$fieldNames[$i].'_type']==10) {	// 隐藏字段，记录父表id
 				$addCode .= '
 					<div>
@@ -442,7 +442,7 @@ class gencms {
 				else
 					$isChecked = 0;
 				$sql = "INSERT INTO ".$this->typeTableName." (table_name, table_field, type_value, is_checked) VALUES ('".$tableName."', '".$tableName."_".$fieldNames[$i]."', '".$_POST[$fieldNames[$i].'_type']."',".$isChecked.")";
-				MySQL_query($sql);
+				mysqli_query($this->cmsgConn, $sql);
 			}
 		} 
 		$addCode .= '
@@ -468,13 +468,12 @@ class gencms {
 	public function genEditPage($tableName, $fieldNames) {
 		$fields = count($fieldNames);
 		$editCode .= '<?php
+	session_start();
 	require_once \'../'.$this->configPath.$this->configPageName.'\';
-	$conn = MySQL_connect($servername, $username, $password);
-	MySQL_query(\'use \'.$dbname, $conn);
-	MySQL_query(\'SET NAMES utf8\');
+	$link = mysqli_connect($servername, $username,  $password, $dbname);
+	mysqli_query($link, \'SET NAMES utf8\');
 	require_once \'../'.$this->configPath.$this->commonPageName.'\';
 	require_once \''.$this->libsPath.'shareFunction.php\';
-	session_start();
 	if($_SESSION[\'rights\']>2) {
 		$url = base64_decode($_GET[\'url\']);
 		header(\'Location: \'.$url);
@@ -497,23 +496,25 @@ class gencms {
 	$editCode .= '
 	$update_time = date(\'Y-m-d H:i:s\');
 	if($_GET[\'action\']==\'edit\') {
-		$query = MySQL_query("UPDATE '.$tableName.' SET ';
+		$sql = "UPDATE '.$tableName.' SET ';
 	for ($i=0; $i < $fields; $i++) {
 		if($i==0)
 			$editCode .= $fieldNames[$i].' = '.'\'$'.$fieldNames[$i].'\'';
 		else
 			$editCode .= ', '.$fieldNames[$i].' = '.'\'$'.$fieldNames[$i].'\'';
 	}
-	$editCode .= ' WHERE '.$fieldNames[0].' = \'$'.$fieldNames[0].'\'");
+	$editCode .= ' WHERE '.$fieldNames[0].' = \'$'.$fieldNames[0].'\'";
+		mysqli_query($link, $sql);
 		if($query==1 && isset($_GET[\'fkid\']))
 			header(\'Location: '.$this->listPageName.'?page=\'.$page.\'&fkid=\'.$_GET[\'fkid\']);
 		else
 			header(\'Location: '.$this->listPageName.'?page=\'.$page);
 	} else {
 		$'.$fieldNames[0].' = $_GET[\''.$fieldNames[0].'\'];
-		$rs = MySQL_query("SELECT * FROM '.$tableName.' WHERE '.$fieldNames[0].' = \'$'.$fieldNames[0].'\'");
-		MySQL_num_rows($rs);
-		$result=mysql_fetch_array($rs);
+		$sql = "SELECT * FROM '.$tableName.' WHERE '.$fieldNames[0].' = \'$'.$fieldNames[0].'\'";
+		$rs = mysqli_query($link, $sql);
+		mysqli_num_rows($rs);
+		$result=mysqli_fetch_array($rs);
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -680,13 +681,13 @@ class gencms {
 		$fields = count($fieldNames);
 		$deleteCode .= '<?php
 require_once \'../'.$this->configPath.$this->configPageName.'\';
-$conn = MySQL_connect($servername, $username, $password);
-MySQL_query(\'use \'.$dbname, $conn);
-MySQL_query(\'SET NAMES utf8\');
+$link = mysqli_connect($servername, $username,  $password, $dbname);
+	mysqli_query($link, \'SET NAMES utf8\');
 $'.$fieldNames[0].' = $_GET[\''.$fieldNames[0].'\'];
 $update_time = date(\'Y-m-d H:i:s\');
 if($_GET[\'action\']==\'del\') {
-	$query = MySQL_query("UPDATE '.$tableName.' SET '.$fieldNames[$fields-1].' = 1 WHERE '.$fieldNames[0].' = ".$'.$fieldNames[0].');
+	$sql = "UPDATE '.$tableName.' SET '.$fieldNames[$fields-1].' = 1 WHERE '.$fieldNames[0].' = ".$'.$fieldNames[0].';
+	$query = mysqli_query($link, $sql);
 	if($query==1)
 		echo json_encode(1);
 	else
@@ -753,22 +754,21 @@ function editRecord(param) {
 	 *************************************/
 	public function genLoginPage() {
 		$loginCode .= '<?php
-	require_once \'../../'.$this->configPath.$this->configPageName.'\';
-	$conn = MySQL_connect($servername, $username, $password);
-	MySQL_query(\'use \'.$c_dbName, $conn);
-	MySQL_query(\'SET NAMES utf8\');
+	session_start();
+	require_once \'../'.$this->configPath.$this->configPageName.'\';
+	$link = mysqli_connect($servername, $username,  $password, $dbname);
+	mysqli_query($link, \'SET NAMES utf8\');
 	if($_GET[\'action\']==\'login\') {
 		$url = base64_decode($_POST[\'url\']);
 		if($url==\'\')
 			$url = \''.$this->listPageName.'\';
 		$loginname = $_POST[\'loginname\'];
 		$password = $_POST[\'password\'];
-		$sql = "SELECT * FROM ".$c_userTableName." WHERE loginname = \'$loginname\'";
-		$rs = MySQL_query($sql);
-		MySQL_num_rows($rs);
-		$result=mysql_fetch_array($rs);
+		$sql = "SELECT * FROM ".$userTableName." WHERE loginname = \'$loginname\'";
+		$rs = mysqli_query($link, $sql);
+		mysqli_num_rows($rs);
+		$result=mysqli_fetch_array($rs);
 		if(md5($password)==$result[\'password\']) {
-			session_start();
 			$_SESSION[\'lid\'] = $result[\'cuid\'];
 			$_SESSION[\'rights\'] = $result[\'rights\'];
 			header(\'Location: \'.$url);
@@ -776,7 +776,6 @@ function editRecord(param) {
 			header(\'Location: '.$this->loginPageName.'\');
 	} else {
 		if($_GET[\'action\']==\'logout\') {
-			session_start();
 			unset($_SESSION[\'lid\']);
 		}
 ?>
